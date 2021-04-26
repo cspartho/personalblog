@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 django = "*"
 django-taggit = "*"
+psycopg2-binary = "*"
+markdown = "*"
 
 [dev-packages]
 
