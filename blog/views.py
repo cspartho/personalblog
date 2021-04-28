@@ -4,11 +4,12 @@ from .models import Post,Comment
 from taggit.models import Tag
 
 from django.core.paginator import Paginator,EmptyPage,PageNotAnInteger 
-from django.contrib.postgres.search import SearchVector
+from django.contrib.postgres.search import SearchVector,SearchQuery,SearchRank
 from .forms import EmailPostForm,CommentForm,SearchForm
 
 from django.db.models import Count
-
+#Trigram
+from django.contrib.postgres.search import TrigramSimilarity
 # Create your views here.
 def post_list(request,tag_slug=None):
     object_list=Post.published.all()
@@ -85,6 +86,17 @@ def post_search(request):
         form = SearchForm(request.GET)
         if form.is_valid():
             query = form.cleaned_data['query']
-            results = Post.published.annotate(search=SearchVector('title','body'),).filter(search=query)
-    
+            
+            search_query = SearchQuery(query)
+            #Trigram similarty for title search
+            #results = Post.published.annotate(similarity=TrigramSimilarity('title', query),).filter(similarity__gt=0.1).order_by('-similarity')
+            
+            #Full-Text seach To seach body and title
+            search_vector = SearchVector('title', 'body')
+            
+            results = Post.published.annotate(search=search_vector,rank=SearchRank(search_vector, search_query)).filter(search=search_query).order_by('-rank')
+           
+            #Rank and weight search for body and title
+            #search_vector = SearchVector('title',weight='A') + SearchVector('body',weight='B')
+            #results = Post.published.annotate(rank=SearchRank(search_vector, search_query)).filter(rank__gte=0.3).order_by('-rank')
     return render(request,'blog/post/search.html',{'form':form,'query':query,'results':results})
