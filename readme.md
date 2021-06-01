@@ -1,4 +1,4 @@
-#My Personal Blog
+# My Personal Blog
 
-##Features
+## Features
 -Add comment section for viewers
